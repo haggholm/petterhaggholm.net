@@ -10,12 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "async": "^1.3.0",
-    "consolidate": "^0.13.1",
     "express": "^4.13.1",
     "font-awesome": "^4.3.0",
     "glob": "^5.0.13",
     "hogan.js": "^3.0.2",
-    "http2": "github:timmckenzie/node-http2",
     "lodash": "^3.10.0",
     "page": "^1.6.3",
     "page.js-express-mapper.js": "^1.0.5",
