@@ -131,22 +131,16 @@ async.auto({
       '</assets/font-awesome.woff2?v=' + indexData.fontAwesomeVersion + '>; rel=prefetch'
     ]);
     res.render('home');
-    //if (res.push) {
-    //  var headers = { 'Content-type': 'application/javascript' };
-    //  res.push(clientAppEntry, headers, function(err, stream) {
-    //    stream.on('acknowledge', function() {
-    //    });
-    //
-    //    stream.on('error', function() {
-    //    });
-    //
-    //    stream.end('');
-    //  });
-    //  res.end('<script src="' + clientAppEntry + '"></script>');
-    //}
   });
 
-  require('../app.shared/routes').init(app);
+  function getAPI(pth, callback) {
+    return require('./rest')[pth](function(err, data) {
+      callback(err, data);
+    });
+  }
+  require('../app.shared/routes').init(app, getAPI);
+
+  app.use('/api', require('./rest'));
 
   app.route('*').get(function(req, res, next) {
     var filePath = req.url.replace(/\?.*$/, '');
@@ -178,5 +172,18 @@ async.auto({
       cert: initData.sslCert
     };
   initData.httpModule.createServer(options, app).listen(port);
+
+  _.each(['HUP', 'INT', 'QUIT', 'TERM'], function(sig) {
+    process.on('SIG'+sig, function() {
+      require('./bookshelf').db.knex.destroy(function(err) {
+        if (err) {
+          return console.error(err.message);
+        }
+        console.log('Terminated knex connection pool');
+        process.exit(0);
+      });
+    });
+  });
+
   console.log('Listening on port ' + 4000);
 });

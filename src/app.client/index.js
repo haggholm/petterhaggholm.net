@@ -9,6 +9,7 @@ require('bootstrap');
 
 var routes = require('../app.shared/routes')
   , templates = require('../../build/templates.js');
+var booklist = require('./booklist');
 
 window.page = page;
 
@@ -25,11 +26,20 @@ pageExpressMapper({
   expressAppName: 'app'
 });
 
-routes.init(window.app);
+function getAPI(pth, callback) {
+  $.ajax({
+    url: '/api/' + pth,
+    success: function(data, status) {
+      callback(null, data);
+    }
+  });
+}
 
-//window.app.route('/').get(function(req, res) {
-//    res.render('home');
-//});
+
+routes.init(window.app, getAPI);
+window.app.route('/books').get(function(req, res, next) {
+  booklist.init();
+});
 
 // Activate!
 page();
@@ -59,3 +69,5 @@ function refreshLinks(selector) {
 $(document).ready(function(){
   refreshLinks();
 });
+
+

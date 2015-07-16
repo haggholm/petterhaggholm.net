@@ -12,6 +12,26 @@
   <link rel="prefetch" href="https://platform.twitter.com/widgets.js" />
   <link rel="shortcut icon" type="image/png" href="/img/eye-16.png" />
   <link rel="stylesheet" href="/assets/index.css" />
+
+  <script>
+      (function () {
+          // http://www.phpied.com/dynamic-script-and-style-elements-in-ie/
+          window.addCSS = function (css) {
+              var ss1 = document.createElement('style');
+              ss1.setAttribute('type', 'text/css');
+              var hh1 = document.getElementsByTagName('head')[0];
+              hh1.appendChild(ss1);
+              if (ss1.styleSheet) {   // IE
+                  ss1.styleSheet.cssText = css;
+              } else {                // the world
+                  var tt1 = document.createTextNode(css);
+                  ss1.appendChild(tt1);
+              }
+          };
+
+          window.addCSS('.dynamically-hidden { display: none; }');
+    })();
+  </script>
 </head>
 
 <body>
