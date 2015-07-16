@@ -16,6 +16,7 @@
     "express": "^4.13.1",
     "font-awesome": "^4.3.0",
     "glob": "^5.0.13",
+    "handlebars": "^3.0.3",
     "hogan.js": "^3.0.2",
     "knex": "^0.8.6",
     "lodash": "^3.10.0",
