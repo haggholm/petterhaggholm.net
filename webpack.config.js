@@ -25,7 +25,8 @@ module.exports = {
       //// Alternative syntax:
       //{ test: /\.css$/, loaders: ["style", "css"] },
 
-      {test: /\.(es6|jsx)$/, loaders: ['babel']}
+      {test: /\.(es6|jsx)$/, loaders: ['babel']},
+      {test: /\.json$/, loaders: ['json-loader']}
     ]
   },
 

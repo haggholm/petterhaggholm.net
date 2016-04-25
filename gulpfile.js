@@ -1,27 +1,55 @@
 'use strict';
 
 var del = require('del')
+  , fs = require('fs')
   , gulp = require('gulp')
   , gutil = require('gulp-util')
   , gzip = require('gulp-gzip')
   , less = require('gulp-less')
-  , hoganCompiler = require('gulp-hogan-compile')
+  , htmlmin = require('gulp-htmlmin')
+  , path = require('path')
   , rev = require('gulp-rev')
   , runSequence = require('run-sequence')
   , sourcemaps = require('gulp-sourcemaps')
   , webpack = require('webpack');
+var handlebars = require('gulp-handlebars');
+var wrap = require('gulp-wrap');
+var concat = require('gulp-concat');
 
 var LessPluginCleanCSS = require('less-plugin-clean-css')
   , LessPluginAutoPrefix = require('less-plugin-autoprefix');
 
 
-gulp.task('clean', function(cb) {
-  del(['build'], cb);
+gulp.task('clean', function() {
+  return del(['build']);
 });
 
-gulp.task('templates', ['clean'], function () {
+gulp.task('templates', ['clean'], function (cb) {
+  // fs.mkdir(path.join(__dirname, 'build'), function(err) {
+  //   hulkster.compile(path.join(__dirname, 'src', 'templates', '**', '*.hbs'), {
+  //     format: 'js',
+  //     minify: 'true',
+  //     minifyHtml: 'true',
+  //     output: path.join(__dirname, 'build', 'templates.js'),
+  //     hoganVar: 'require("hogan.js")'
+  //   });
+  //   cb();
+  // });
+
   return gulp.src('src/templates/**/*.hbs')
-    .pipe(hoganCompiler('templates.js', {wrapper: 'commonjs', hoganModule: 'hogan.js'}))
+    .pipe(htmlmin({
+      collapseWhitespace: true,
+      conservativeCollapse: true,
+      removeAttributeQuotes: true
+    }))
+    .pipe(handlebars({
+      handlebars: require('handlebars'),
+      compilerOptions: {
+        min: true
+      }
+    }))
+    .pipe(wrap('exports[\'<%= file.relative %>\'] = require(\'handlebars/dist/handlebars.runtime.min.js\').template(<%= contents %>);'))
+    .pipe(concat('templates.js'))
     .pipe(gulp.dest('build'));
 });
 
@@ -46,7 +74,7 @@ gulp.task('copy', function() {
     .pipe(gulp.dest('build/assets'));
 });
 
-gulp.task('webpack', ['templates', 'less'], function (callback) {
+gulp.task('webpack', ['clean', 'templates', 'less'], function (callback) {
   webpack(
     require('./webpack.config'),
     function (err, stats) {

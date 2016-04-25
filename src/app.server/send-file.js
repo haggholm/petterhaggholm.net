@@ -7,11 +7,11 @@ var _ = require('lodash');
 var baseDir = path.resolve(__dirname, '..', '..');
 
 var allowedBaseDirs = [
-  path.resolve(path.join(__dirname, '..', '..', 'build')),
+  path.resolve(path.join(baseDir, 'build')),
   path.resolve(path.join(__dirname, '..', 'js')),
   path.resolve(path.join(__dirname, '..', 'css'))
 ];
-var longestRootLength = _.max(_.pluck(allowedBaseDirs, 'length'));
+var longestRootLength = _.max(_.map(allowedBaseDirs, 'length'));
 
 
 
@@ -22,7 +22,7 @@ module.exports = function sendFileOr403(res, pth) {
     return pth.startsWith(baseDir);
   };
 
-  if (!_.any(allowedBaseDirs, isBaseOfFile)) {
+  if (!_.some(allowedBaseDirs, isBaseOfFile)) {
     res.status(403); // @TODO Lookup proper method, doi
   } else {
     res.sendFile(pth);

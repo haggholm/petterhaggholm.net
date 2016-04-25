@@ -1,8 +1,6 @@
 'use strict';
 
-var path = require('path');
-
-require(path.join(__dirname, 'src', 'app.server', 'index'));
+require('./src/app.server/index');
 
 //var fs = require('fs')
 //  , path = require('path')

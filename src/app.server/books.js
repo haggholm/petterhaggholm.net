@@ -4,11 +4,10 @@ var _ = require('lodash');
 
 var db = require('./bookshelf');
 
+
 exports.getAll = function getAllBooks(callback) {
-  db.models.Book.fetchAll().asCallback(function(err, collection) {
-    if (err) {
-      return callback(err);
-    }
+  db.models.BookInfo.fetchAll().asCallback(function(err, collection) {
+    if (err) return callback(err);
 
     callback(null, _.map(collection.toJSON(), function(ob) {
       if (ob.title === ob.english_title) {
@@ -24,6 +23,16 @@ exports.getAll = function getAllBooks(callback) {
 
       return ob;
     }));
+  });
+};
+
+exports.getDetails = function getBookDetails(id, callback) {
+  db.models.Book.where('id', id).fetch({
+    withRelated: ['authors', 'translations', 'volume', 'language']
+  }).asCallback(function(err, book) {
+    if (err) return callback(err);
+
+    callback(null, book.toJSON());
   });
 };
 
