@@ -1,60 +1,54 @@
 'use strict';
 
-var _map = require('lodash/map')
-  , _each = require('lodash/each')
-  , _keys = require('lodash/keys')
-  , _chunk = require('lodash/chunk');
+var _each = require('lodash/each')
+  , _extend = require('lodash/extend')
+  , _keys = require('lodash/keys');
 
 var api;
 
+var defaultArgs;
+
 var routes = {
   '/': function (req, res) {
-    res.render('home');
+    res.render('home', defaultArgs);
   },
 
   '/aboutme': function(req, res) {
-    res.render('aboutme');
+    res.render('aboutme', defaultArgs);
   },
 
   '/gallery': function(req, res) {
     api('gallery', function(err, gallery) {
-      const absuri = (url) => ('/' + url);
-      let matrix = _map(gallery, function(img) {
-        return {
-          filename: img.filename,
-          thumbnail: absuri('gallery/thumbnails/' + img.filename),
-          title: img.title,
-          caption: img.caption,
-          details: img.details
-        };
-      });
-      matrix = _chunk(matrix, 4);
-      res.render('gallery', {matrix: matrix});
+      res.render('gallery', _extend({}, defaultArgs, {gallery: gallery}));
+    });
+  },
+  '/gallery/picture/:filename': function(req, res) {
+    api('gallery', req.params.filename, function(err, picture) {
+      res.render('picture', _extend({}, defaultArgs, {picture: picture}));
     });
   },
 
   '/books': function(req, res, next) {
     api('books', function(err, data) {
 
-      res.render('booklist', {book_data: data});
+      res.render('booklist', _extend({}, defaultArgs, {book_data: data}));
     });
   },
-
   '/books/:id': function(req, res, next) {
     api('books', req.params.id, function(err, data) {
-console.log(__filename, 'single book data');
-console.log({book: data});
-      res.render('book', {book: data});
+      res.render('book', _extend({}, defaultArgs, {book: data}));
     });
   },
 
   '/login': function(req, res, next) {
-    res.render('login');
+    res.render('login', defaultArgs);
   }
 };
 
-exports.init = function init(app, getAPI) {
+exports.init = function init(app, getAPI, cfg) {
   api = getAPI;
+  console.log(cfg);
+  defaultArgs = cfg;
   _each(routes, function(handler, pth) {
     app.route(pth).get(handler);
   });

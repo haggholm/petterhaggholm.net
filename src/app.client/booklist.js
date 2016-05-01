@@ -24,6 +24,12 @@ exports.init = function() {
     initComplete: function() {
       console.log('booklist init complete');
       container.removeClass('dynamically-hidden');
+
+      container.find('tfoot input').each(function(idx, input) {
+        $(input).on('keyup', function() {
+          dataTable.column(idx).search(input.value).draw();
+        });
+      });
     }
   });
 };

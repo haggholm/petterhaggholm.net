@@ -1,0 +1,15 @@
+<h2>{{ picture.title }}</h2>
+<div class="center-block">
+  <img class="center-block" src="{{staticRoot}}gallery/img/{{picture.filename}}"
+       alt="{{picture.title}}" />
+</div>
+<div>
+  {{{ picture.caption }}}
+
+  <p class="text-muted text-center" style="margin-top: 5ex;">
+    {{{ picture.details }}}
+  </p>
+  <p class="text-muted text-center">
+    Copyright &copy;1995–2016 Petter Häggholm
+  </p>
+</div>

@@ -14,6 +14,12 @@ const knex = require('knex')({
 const bookshelf = require('bookshelf')(knex);
 
 
+var Artwork = bookshelf.Model.extend({
+  tableName: 'artwork',
+  idAttribute: 'id'
+});
+
+
 var Book, BookInfo, User, ResetToken, Series, Writer, Volume, Translator, Translation, Language;
 
 Book = bookshelf.Model.extend({
@@ -23,10 +29,10 @@ Book = bookshelf.Model.extend({
     return this.belongsTo(Volume);
   },
   authors: function() {
-    return this.belongsToMany(Writer, 'authors', 'book', 'author');
+    return this.belongsToMany(Writer, 'authors', 'book_id', 'person_id');
   },
   translations: function() {
-    return this.hasMany(Translation, 'book');
+    return this.hasMany(Translation);
   },
   language: function() {
     return this.belongsTo(Language, 'language_id');
@@ -37,10 +43,10 @@ Book = bookshelf.Model.extend({
 });
 
 Writer = bookshelf.Model.extend({
-  tableName: 'people',
+  tableName: 'persons',
   idAttribute: 'id',
   books: function() {
-    return this.hasMany(Book, 'authors', 'book', 'author');
+    return this.hasMany(Book, 'authors', 'book_id', 'person_id');
   }
 });
 
@@ -104,15 +110,18 @@ module.exports = {
   db: bookshelf,
   knex: knex,
   models: {
+    Artwork,
     User,
     Book,
     BookInfo,
+    Series,
     ResetToken
   },
   collections: {
     Users: bookshelf.Collection.extend({ model: User }),
     Books: bookshelf.Collection.extend({ model: Book }),
-    ResetTokens: bookshelf.Collection.extend({ model: ResetToken })
+    ResetTokens: bookshelf.Collection.extend({ model: ResetToken }),
+    Gallery: bookshelf.Collection.extend({ model: Artwork })
   }
 };
 

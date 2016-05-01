@@ -1,12 +1,15 @@
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
   id serial not null primary key,
-  email character varying not null,
+  email character varying not null unique,
   password character varying(64), -- 32 byte (256 bit) PBKDF2 hash
   salt character varying(64),
   last_login timestamp with time zone,
   last_login_attempt timestamp with time zone
 );
+
+INSERT INTO users (email) VALUES ('petter@petterhaggholm.net');
+
 
 DROP TABLE IF EXISTS sessions;
 CREATE TABLE sessions (
@@ -27,4 +30,12 @@ CREATE INDEX ON sessions (expired ASC);
 
 
 
-INSERT INTO users (email) VALUES ('petter@petterhaggholm.net');
+DROP TABLE IF EXISTS artwork;
+CREATE TABLE artwork (
+  id serial primary key,
+  filename character varying(256) not null,
+  thumbnail character varying(512) not null,
+  title character varying(256) not null,
+  caption text not null,
+  details character varying
+);

@@ -1,6 +1,7 @@
 'use strict';
 
 var _ = require('lodash')
+  , db = require('./bookshelf')
   , fs = require('fs')
   , express = require('express');
 
@@ -11,12 +12,37 @@ const cache = {};
 
 module.exports = express.Router();
 
+
 module.exports.gallery = function(callback) {
-  fs.readFile(__dirname + '/gallery.xml', 'utf8', (err, data) => {
-    xml2js.parseString(data, (err, ob) => {
-      callback(err, ob);
+  var getGallery;
+  if (cache.gallery) {
+    getGallery = (cb) => cb(null, cache.gallery);
+  } else {
+    getGallery = (cb) => db.models.Artwork.fetchAll().asCallback(
+      (err, gallery) => {
+        if (err) return cb(err);
+        cb(null, (cache.gallery = gallery.toJSON()));
+      });
+  }
+
+  if (arguments.length === 1) {
+    getGallery(callback);
+
+  } else {
+    const filename = arguments[0];
+    callback = arguments[1];
+
+    getGallery((err, gallery) => {
+      for (let i = gallery.length - 1; i >= 0; i--) {
+        var row = gallery[i];
+        if (row.filename === filename) {
+          return callback(null, row);
+        }
+      }
+
+      return callback(new Error(`No such picture: ${filename}`));
     });
-  });
+  }
 };
 
 module.exports.books = function(callback) {
@@ -41,28 +67,41 @@ module.exports.books = function(callback) {
   }
 };
 
-module.exports.get('/books/:id', function(req, res, next) {
-  module.exports.books(req.params.id, function(err, data) {
+module.exports.get('/gallery/:picture', function(req, res) {
+  module.exports.gallery(req.params.picture, function(err, data) {
     res.set('Content-type', 'application/json');
     if (err) {
-      res.json(err.message).status(500).end();
+      res.json(err.message).status(500);
       return;
     }
 
-    res.json(data).status(200).end();
+    res.json(data).status(200);
+  });
+});
+
+
+module.exports.get('/books/:id', function(req, res) {
+  module.exports.books(req.params.id, function(err, data) {
+    res.set('Content-type', 'application/json');
+    if (err) {
+      res.json(err.message).status(500);
+      return;
+    }
+
+    res.json(data).status(200);
   });
 });
 
 _.each(['books', 'gallery'], function(api) {
-  module.exports.get('/' + api, function(req, res, next) {
+  module.exports.get('/' + api, function(req, res) {
     module.exports[api](function(err, data) {
       res.set('Content-type', 'application/json');
       if (err) {
-        res.json(err.message).status(500).end();
+        res.json(err.message).status(500);
         return;
       }
 
-      res.json(data).status(200).end();
+      res.json(data).status(200);
     });
   });
 });

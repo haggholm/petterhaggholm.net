@@ -1,22 +1,20 @@
 <div data-ui-view>
   <div class="col-md-8 col-md-offset-2">
-    {{#each matrix as |img_row|}}
     <div class="row">
-      {{#each img_row as |img_info|}}
-      <div class="col-md-3 col-sm-6">
-        <p style="text-align:center;">
+    <div class="col-md-12 col-sm-12" id="gallery-container">
+      {{#each gallery as |img_info|}}
+        <div class="piece">
           <a href="/gallery/picture/{{img_info.filename}}"
              data-ui-sref="gallery.picture({filename:'{{ img_info.filename }}'})">
-            <img src="{{img_info.thumbnail}}"
+            <img src="{{staticRoot}}{{img_info.thumbnail}}"
                  alt="Thumbnail: {{img_info.title}}"
                  class="thumb" />
           </a>
           <br />
           <em>{{img_info.title}}</em>
-        </p>
-      </div>
+        </div>
       {{/each}}
     </div>
-    {{/each}}
+      </div>
   </div>
 </div>

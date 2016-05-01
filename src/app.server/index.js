@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const async = require('async');
+const crypto = require('crypto');
 const express = require('express');
 const glob = require('glob');
 const handlebars = require('handlebars');
@@ -20,9 +21,6 @@ const auth = require('./auth');
 
 require('../app.shared/template-helpers')(handlebars);
 
-// deprecated express methods
-// app.use(express.favicon());
-// app.use(express.logger('dev'));
 
 var rootPath = path.resolve(path.join(__dirname, '..', '..'))
   , templateRoot = path.join(rootPath, 'src', 'templates');
@@ -54,7 +52,8 @@ async.auto({
 
   fontAwesomeVersion: function(cb) {
     fs.readFile(
-      path.join(rootPath, 'node_modules', 'font-awesome', 'package.json'), 'utf8',
+      path.join(rootPath, 'node_modules', 'font-awesome', 'package.json'),
+      'utf8',
       function(err, data) {
         if (err) return cb(err);
 
@@ -63,12 +62,12 @@ async.auto({
   },
 
   sslKey: function(cb) {
-    var keyFilePath = path.resolve(path.join(rootPath, 'sample-keys', 'phnet3.sample.key'));
+    var keyFilePath = path.join(rootPath, 'sample-keys', 'phnet3.sample.key');
     fs.readFile(keyFilePath, 'utf8', cb);
   },
 
   sslCert: function(cb) {
-    var keyFilePath = path.resolve(path.join(rootPath, 'sample-keys', 'phnet3.sample.crt'));
+    var keyFilePath = path.join(rootPath, 'sample-keys', 'phnet3.sample.crt');
     fs.readFile(keyFilePath, 'utf8', cb);
   },
 
@@ -78,26 +77,30 @@ async.auto({
     throw err;
   }
 
-  var indexTemplate = initData.indexTemplate;
-  var indexData = {
+  const indexTemplate = initData.indexTemplate;
+  const indexData = {
     appEntry: initData.clientIndexFile,
     fontAwesomeVersion: initData.fontAwesomeVersion
   };
 
-  var app = express();
+  const app = express();
   app.use(helmet({
     contentSecurityPolicy: require('./content-security-policy')
   }));
 
-  app.engine('hbs', function (filePath, options, callback) {
-    var relPath = path.relative(templateRoot, path.normalize(filePath));
-    var templateName = relPath.replace(/\.hbs$/, '');
-    options.STATIC_URL = '/'; // @TODO
+  const config = require('../../config');
+  const clientConfig = _.pick(config, ['rootURL', 'staticRoot', 'gaCode']);
+  const clientConfigJSON = JSON.stringify(clientConfig);
 
-    var render = function() {
-      var rendered = indexTemplate(_.extend({
+  app.engine('hbs', function renderTemplate(filePath, options, callback) {
+    const relPath = path.relative(templateRoot, path.normalize(filePath));
+    const templateName = relPath.replace(/\.hbs$/, '');
+
+    const render = function() {
+      const rendered = indexTemplate(_.extend({
           content: templates[templateName](options),
-          nav: initData.navTemplate(options.url)
+          nav: initData.navTemplate(clientConfig),
+          phnetConfig: clientConfigJSON
         },
         indexData
       ));
@@ -105,7 +108,7 @@ async.auto({
     };
 
     if (templates[templateName]) {
-      process.nextTick(render);
+      setImmediate(render);
 
     } else {
       fs.readFile(filePath, 'utf8', function(err, content) {
@@ -131,7 +134,7 @@ async.auto({
   });
 
   app.use(session({
-    secret: 'sdfo8*()U(*OIUJLKIU98hdksajw', // @TODO: Config
+    secret: config.sessionSecret || crypto.randomBytes(64).toString('hex'),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -162,6 +165,18 @@ async.auto({
       done(err, user);
     });
   });
+
+  app.get('/reviews', function(req, res) {
+    require('./review-feed').xml((err, xml) => {
+      if (err) return res.status(500).json(err.message).end();
+
+      res.set('Content-type', 'text/xml; charset=UTF-8');
+      res.status(200);
+      res.send(xml);
+    });
+  });
+  app.get('/books/rss', (req, res) => res.redirect('/reviews'));
+  app.get('/books/feed', (req, res) => res.redirect('/reviews'));
 
   app.post('/api/login', function(req, res, next) {
     console.log(req);
@@ -258,7 +273,8 @@ async.auto({
       });
     }
   }
-  require('../app.shared/routes').init(app, getAPI);
+
+  require('../app.shared/routes').init(app, getAPI, require('../../config'));
 
   app.use('/api', require('./rest'));
 
