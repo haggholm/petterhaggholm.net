@@ -13,34 +13,40 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const session = require('express-session');
 const KnexSessionStore = require('connect-session-knex')(session);
-const sendFileOr403 = require('./send-file');
-const templates = require('../../build/templates');
 const helmet = require('helmet');
 const multer  = require('multer');
-const auth = require('./auth');
 
+const auth = require('./auth');
+const sendFileOr403 = require('./send-file');
+const config = require('../../config');
+const templates = require('../../build/templates');
+const routes = require('../app.shared/routes');
+
+// Initialise template helpers
 require('../app.shared/template-helpers')(handlebars);
 
+const rootPath = path.resolve(path.join(__dirname, '..', '..'));
+const templateRoot = path.join(rootPath, 'src', 'templates');
 
-var rootPath = path.resolve(path.join(__dirname, '..', '..'))
-  , templateRoot = path.join(rootPath, 'src', 'templates');
 
-function readTemplate(name) {
-  return function(callback) {
-    fs.readFile(
-      path.join(templateRoot, name), 'utf8', function(err, data) {
-        if (err) {
-          return callback(err);
-        }
+function readTemplate(name, callback) {
+  if (templates[name]) {
+    return callback(null, templates[name]);
+  }
 
-        callback(null, handlebars.compile(data, { min: true }));
-      });
-  };
+  fs.readFile(path.join(templateRoot, `${name}.hbs`), 'utf8', function(err, data) {
+      if (err) {
+        return callback(err);
+      }
+
+      templates[name] = handlebars.compile(data, { min: true });
+      callback(null, templates[name]);
+    });
 }
 
 async.auto({
-  indexTemplate: readTemplate('index.hbs'),
-  navTemplate: readTemplate('nav.hbs'),
+  indexTemplate: (cb) => readTemplate('index', cb),
+  navTemplate: (cb) => readTemplate('nav', cb),
 
   clientIndexFile: function(cb) {
     glob.glob(path.join(rootPath, 'build', 'index.*.js'), function(err, data) {
@@ -88,7 +94,6 @@ async.auto({
     contentSecurityPolicy: require('./content-security-policy')
   }));
 
-  const config = require('../../config');
   const clientConfig = _.pick(config, ['rootURL', 'staticRoot', 'gaCode']);
   const clientConfigJSON = JSON.stringify(clientConfig);
 
@@ -96,28 +101,18 @@ async.auto({
     const relPath = path.relative(templateRoot, path.normalize(filePath));
     const templateName = relPath.replace(/\.hbs$/, '');
 
-    const render = function() {
+    readTemplate(templateName, (err, template) => {
+      if (err) return callback(err);
+
       const rendered = indexTemplate(_.extend({
-          content: templates[templateName](options),
+          content: template(options),
           nav: initData.navTemplate(clientConfig),
           phnetConfig: clientConfigJSON
         },
         indexData
       ));
       callback(null, rendered);
-    };
-
-    if (templates[templateName]) {
-      setImmediate(render);
-
-    } else {
-      fs.readFile(filePath, 'utf8', function(err, content) {
-        if (err) return callback(new Error(err));
-
-        templates[templateName] = handlebars.compile(content);
-        render();
-      });
-    }
+    });
   });
 
   app.set('views', templateRoot);
@@ -127,8 +122,9 @@ async.auto({
   app.use(bodyParser.urlencoded({ extended: true }));
   app.route('/').get(function (req, res) {
     res.set('Link', [
-      '<' + indexData.appEntry + '>; rel=prefetch',
-      '</assets/font-awesome.woff2?v=' + indexData.fontAwesomeVersion + '>; rel=prefetch'
+      `<${indexData.appEntry}>; rel=prefetch`,
+      '</assets/index.css>; rel=prefetch',
+      `</assets/font-awesome.woff2?v=${indexData.fontAwesomeVersion}>; rel=prefetch`
     ]);
     res.render('home');
   });
@@ -168,27 +164,34 @@ async.auto({
 
   app.get('/reviews', function(req, res) {
     require('./review-feed').xml((err, xml) => {
-      if (err) return res.status(500).json(err.message).end();
+      if (err) {
+        res.status(500);
+        return res.json(err.message);
+      }
 
-      res.set('Content-type', 'text/xml; charset=UTF-8');
       res.status(200);
+      res.set('Content-type', 'text/xml; charset=UTF-8');
       res.send(xml);
     });
   });
-  app.get('/books/rss', (req, res) => res.redirect('/reviews'));
-  app.get('/books/feed', (req, res) => res.redirect('/reviews'));
+  app.get('/books/rss', (req, res) => {
+    res.redirect('/reviews');
+  });
+  app.get('/books/feed', (req, res) => {
+    res.redirect('/reviews');
+  });
 
-  app.post('/api/login', function(req, res, next) {
-    console.log(req);
+  app.post('/api/login', function(req, res) {
     console.log(`Trying to login as ${req.body.email}`);
     passport.authenticate('local', function(err, user, info) {
       if (err) {
         console.log(`Error logging in: ${err.message}`, err);
-        return res.render('login', {
+        res.render('login', {
           error: err.message === 'ERR:RATE' ?
             'Please wait a moment before trying to login again' :
             'Invalid username or password'
         });
+        return;
       }
 
       if (!user) {
@@ -274,9 +277,9 @@ async.auto({
     }
   }
 
-  require('../app.shared/routes').init(app, getAPI, require('../../config'));
-
   app.use('/api', require('./rest'));
+
+  routes.init(app, getAPI, config);
 
   app.route('*').get(function(req, res, next) {
     var filePath = req.url.replace(/\?.*$/, '');
@@ -297,10 +300,6 @@ async.auto({
       }
     });
   });
-
-  //app.get('/', function (req, res) {
-  //	res.render('list', {examples: examples});
-  //});
 
   var port = 4000
     , options = {

@@ -28,19 +28,18 @@ var routes = {
     });
   },
 
-  '/books': function(req, res, next) {
+  '/books': function(req, res) {
     api('books', function(err, data) {
-
       res.render('booklist', _extend({}, defaultArgs, {book_data: data}));
     });
   },
-  '/books/:id': function(req, res, next) {
+  '/books/:id': function(req, res) {
     api('books', req.params.id, function(err, data) {
       res.render('book', _extend({}, defaultArgs, {book: data}));
     });
   },
 
-  '/login': function(req, res, next) {
+  '/login': function(req, res) {
     res.render('login', defaultArgs);
   }
 };

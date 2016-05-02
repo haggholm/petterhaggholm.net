@@ -69,7 +69,6 @@ module.exports.books = function(callback) {
 
 module.exports.get('/gallery/:picture', function(req, res) {
   module.exports.gallery(req.params.picture, function(err, data) {
-    res.set('Content-type', 'application/json');
     if (err) {
       res.json(err.message).status(500);
       return;
@@ -82,7 +81,6 @@ module.exports.get('/gallery/:picture', function(req, res) {
 
 module.exports.get('/books/:id', function(req, res) {
   module.exports.books(req.params.id, function(err, data) {
-    res.set('Content-type', 'application/json');
     if (err) {
       res.json(err.message).status(500);
       return;
@@ -95,7 +93,6 @@ module.exports.get('/books/:id', function(req, res) {
 _.each(['books', 'gallery'], function(api) {
   module.exports.get('/' + api, function(req, res) {
     module.exports[api](function(err, data) {
-      res.set('Content-type', 'application/json');
       if (err) {
         res.json(err.message).status(500);
         return;

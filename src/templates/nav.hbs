@@ -10,32 +10,25 @@
             <span class="icon-bar"></span>
         </button>
 
-        <a class="navbar-brand"
-           href="/"
-           data-ui-sref="index"
-           data-ui-sref-active="active">petterhaggholm.net</a>
+        <a class="navbar-brand" href="/">petterhaggholm.net</a>
     </div>
 
     <div class="collapse navbar-collapse" id="phnet-main-nav">
-        <ul class="nav navbar-nav" ng-cloak>
-            <li data-ui-sref="aboutme"
-                data-ui-sref-active="active">
-                <a href="/aboutme" data-ui-sref="aboutme">
+        <ul class="nav navbar-nav">
+            <li>
+                <a href="/aboutme">
                     <i class="fa fa-user"></i>
                     About me
                 </a>
             </li>
-
-            <li data-ui-sref="books.list"
-                ng-class="{active: $state.includes('books')}">
-                <a href="/books" data-ui-sref="books.list">
+            <li>
+                <a href="/books">
                     <i class="fa fa-book"></i>
                     Reading list
                 </a>
             </li>
-            <li data-ui-sref="gallery.main"
-                ng-class="{active: $state.includes('gallery')}">
-                <a href="/gallery" data-ui-sref="gallery.main">
+            <li>
+                <a href="/gallery">
                     <i class="fa fa-picture-o"></i>
                     Gallery
                 </a>
@@ -166,7 +159,6 @@
                         <i class="fa fa-fw fa-external-link"></i>
                         PyCharm
                     </a></li>
-
                 </ul>
             </li>
         </ul>

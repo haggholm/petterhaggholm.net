@@ -9,14 +9,14 @@ var $ = require('jquery')
 window.jQuery = $;
 require('bootstrap');
 
-var routes = require('../app.shared/routes')
-  , templates = require('../../build/templates');
-
-var booklist = require('./booklist');
-var login = require('./login');
-
 const handlebars = require('handlebars/dist/handlebars.runtime.min.js');
 require('../app.shared/template-helpers')(handlebars);
+const routes = require('../app.shared/routes')
+const templates = require('../../build/templates');
+
+const booklist = require('./booklist');
+const login = require('./login');
+
 
 const pages = {
   booklist: booklist,
@@ -68,9 +68,6 @@ function getAPI(pth, callback) {
 }
 getAPI._cache = {};
 
-
-routes.init(window.app, getAPI, window.phnetConfig);
-
 page.exit('/books', function(_1, _2, next) {
   try {
     booklist.exit();
@@ -80,6 +77,39 @@ page.exit('/books', function(_1, _2, next) {
 
   next();
 });
+
+const navBar = $('#navigation');
+
+page.exit('*', function(req, res, next) {
+  navBar.find('.active').removeClass('active');
+  next();
+});
+
+
+window.app.route('*').get(function(req, res, next) {
+  console.info(req.path);
+  const anchors = navBar.find('ul > li > a');
+  console.log(anchors);
+  for (let i = 0; i < anchors.length; i++) {
+    const a = anchors[i];
+    const href = a.href.startsWith(location.origin) ?
+      a.href.substr(location.origin.length) :
+      a.href;
+    console.log(href);
+
+    if (href !== '/' && req.path.startsWith(href)) {
+      console.log(href, 'ok')
+      $(a).closest('li').addClass('active');
+      return next();
+    }
+  }
+
+  $('.navbar-header a[href="/"]').addClass('active');
+  next();
+});
+
+routes.init(window.app, getAPI, window.phnetConfig);
+
 
 
 // Activate!
