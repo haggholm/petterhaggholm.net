@@ -1,5 +1,0 @@
-{
-  "preset": "node-style-guide",
-  "disallowMultipleVarDecl": null,
-  "requireTrailingComma": null
-}

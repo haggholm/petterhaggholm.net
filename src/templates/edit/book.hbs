@@ -1,0 +1,217 @@
+<form class="form-horizontal">
+  <input type="hidden" value="{{book.id}}"/>
+
+  <div class="form-group">
+    <label for="book-isbn" class="col-sm-2 control-label">ISBN</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="book-isbn" placeholder="ISBN"
+             inputmode="numeric" pattern="\d+[\d-]+\d+" value="{{book.isbn}}"/>
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="button" id="search-isbn">Search</button>
+      </span>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="book-oclc" class="col-sm-2 control-label">OCLC</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="book-oclc" placeholder="OCLC"
+             inputmode="numeric" pattern="\d+[\d-]+\d+" value="{{book.oclc}}"/>
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="button" id="search-oclc">Search</button>
+      </span>
+    </div>
+  </div>
+
+  <h2>Title</h2>
+  <div class="form-group">
+    <label for="book-title" class="col-sm-2 control-label">Title</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="book-title" placeholder="Title"
+             value="{{book.title}}"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="book-english-title" class="col-sm-2 control-label">English title</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="book-english-title"
+             placeholder="English title (if different)"
+             value="{{book.english_title}}"/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="book-read-original" class="col-sm-2 control-label">Read original</label>
+    <div class="col-sm-10">
+      <input type="checkbox" class="form-control" id="book-read-original"
+             {{#if book.read_original}}checked="checked"{{/if}}/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="book-owned" class="col-sm-2 control-label">Own it</label>
+    <div class="col-sm-10">
+      <input type="checkbox" class="form-control" id="book-owned"
+             {{#if book.owned}}checked="checked"{{/if}}/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="book-language" class="col-sm-2 control-label">Language</label>
+    <div class="col-sm-10">
+      <select class="form-control" id="book-language">
+        {{#each language}}
+          <option value="{{id}}">{{name}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+
+  <h2>Author(s)</h2>
+  {{#each book.authors as |author|}}
+    {{> edit/author }}
+  {{/each}}
+
+  <h2>Notes and reviews</h2>
+  <div class="form-group">
+    <label for="book-notes" class="col-sm-2 control-label">Notes</label>
+    <div class="col-sm-10">
+      <textarea class="form-control" id="book-notes">{{book.notes}}</textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="book-rating" class="col-sm-2 control-label">Rating</label>
+    <div class="col-sm-10">
+      <input type="number" max="10" min="0" class="form-control" id="book-rating"
+             placeholder="0–10"
+             value="{{book.rating}}"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="book-review" class="col-sm-2 control-label">Review</label>
+    <div class="col-sm-10">
+      <textarea class="form-control" id="book-review">{{book.review}}</textarea>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="book-series" class="col-sm-2 control-label">Series</label>
+    <div class="col-sm-10">
+      <input type="text" class="form-control" id="book-series" placeholder="Series" value="{{series.title}}"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="book-volume" class="col-sm-2 control-label">Volume</label>
+    <div class="col-sm-10">
+      <input type="number" min="1" class="form-control" id="book-volume" value="{{book.volume}}"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="series-notes" class="col-sm-2 control-label">Notes</label>
+    <div class="col-sm-10">
+      <textarea class="form-control" id="book-notes">{{series.notes}}</textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="series-rating" class="col-sm-2 control-label">Rating</label>
+    <div class="col-sm-10">
+      <input type="number" max="10" min="0" class="form-control" id="book-rating"
+             placeholder="0–10"
+             value="{{series.rating}}"/>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="series-review" class="col-sm-2 control-label">Review</label>
+    <div class="col-sm-10">
+      <textarea class="form-control" id="book-review">{{series.review}}</textarea>
+    </div>
+  </div>
+
+</form>
+
+<table class="table table-striped">
+  <tbody>
+  <tr>
+    <th>Author{{#if book.hasMultipleAuthors}}s{{/if}}</th>
+    <td>
+      {{~#if book.hasMultipleAuthors~}}
+        <ul>
+          {{~#each book.authors~}}
+            <li><a href="/authors/{{author.id}}">{{author.full_name}}</a></li>
+          {{~/each~}}
+        </ul>
+      {{^}}
+        {{~#each book.authors~}}
+          <a href="/authors/{{id}}">{{full_name}}</a>
+        {{~/each~}}
+      {{/if}}
+    </td>
+  </tr>
+
+  {{#if book.translated}}
+    <tr>
+      <th>Original title</th>
+      <td>{{book.title}}</td>
+    </tr>
+    <tr>
+      <th>Original language</th>
+      <td>{{book.language.name}}</td>
+    </tr>
+    {{#each book.translations}}
+      <tr>
+        <th>Translation</th>
+        <td>
+          <cite>{{title}}</cite> by
+          {{~#each translation.translators~}}
+            {{full_name}}
+          {{~/each~}}
+        </td>
+      </tr>
+    {{/each}}
+  {{/if}}
+
+  {{#if book.hasReview}}
+    <tr>
+      <th>Review</th>
+      <td>
+        {{#if book.review}}
+          {{#if book.has_series_review}}
+            <h5>
+              Of <cite>{{book.english_title}}</cite>
+            </h5>
+          {{/if}}
+          {{{book.review}}}
+        {{/if}}
+
+        {{~#each book.volumes~}}
+          {{~#if series.review~}}
+            <h5>
+              Of
+              <a href="/series/{{series.id}}">
+                <cite>{{series.title}}</cite>
+              </a>
+            </h5>
+            {{{series.review}}}
+          {{~/if~}}
+        {{~/each~}}
+      </td>
+    </tr>
+  {{/if}}
+
+  {{~#if book.has_translation_notes~}}
+    <h5>Miscellaneous</h5>
+    <ul class="bullets">
+      {{~#unless book.isEnglish}}{{#if book.translations~}}
+        {{~#if book.read_original~}}
+          <li>I’ve read the original {{book.language.name}}.</li>
+        {{~^~}}
+          <li>I haven’t read the original {{book.language.name}}.</li>
+        {{~/if~}}
+      {{~/if}}{{/unless~}}
+      {{~#if book.isEnglish}}{{#if book.read_original~}}
+        <li>I’ve read the original {{book.language.name}}.</li>
+      {{~/if}}{{/if~}}
+    </ul>
+  {{~/if~}}
+  </td>
+  </tr>
+  </tbody>
+</table>
