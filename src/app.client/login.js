@@ -1,7 +1,5 @@
 'use strict';
 
-var $ = require('jquery');
-
 
 exports.init = function() {
   console.log('login init');

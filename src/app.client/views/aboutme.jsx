@@ -1,6 +1,12 @@
-<div class="text-justify">
+'use strict';
+
+const config = require('../../config');
+
+
+exports.view = (ctrl) => <div>
+  <div class="text-justify">
     <p>
-        <img src="{{ staticRoot }}img/grapplersinc150.jpg"
+        <img src={ config.staticRoot + 'img/grapplersinc150.jpg' }
              alt="At Grapplers Inc"
              title="At Grapplers Inc"
              id="aboutme-portrait" />
@@ -41,18 +47,16 @@
         In 2001, I cast my twenty-sided die and crossed my Rubicon to get out of
         Sweden and shake up my life. I got my B.Sc. at
         <a href="http://www.ubishops.ca">Bishop’s University</a> in a little
-        town called
-        <a href="https://en.wikipedia.org/wiki/Lennoxville,_Quebec">Lennoxville</a>,
+        town called <a href="https://en.wikipedia.org/wiki/Lennoxville,_Quebec">Lennoxville</a>,
         Québec (legally, it’s not a town anymore). I also grew up a little. In
         retrospect, a bigger school (like a proper university) might have offered
         more academically—I liked most of my professors, but there weren’t enough
         of them to do much about the course selection—but I like to think that I
         needed a little university like that during my metamorphosis. On
         pupation or graduation, I moved on to a rather bigger town with a rather
-        bigger university, <i>viz.</i> the
-        <a href="http://cs.ubc.ca">Department of Computer Science</a> at the
-        <a href="http://www.ubc.ca">University of British Columbia</a>,
-        <a href="https://en.wikipedia.org/wiki/Vancouver">Vancouver</a>.
+        bigger university, <i>viz.</i> the <a href="http://cs.ubc.ca">Department
+        of Computer Science</a> at the <a href="http://www.ubc.ca">University of
+        British Columbia</a>, <a href="https://en.wikipedia.org/wiki/Vancouver">Vancouver</a>.
         It was also a good experience, although I’m kind of glad I didn’t do my
         undergrad there. One might drown, while the scale of the graduate
         departments allowed for a more personal experience.
@@ -66,8 +70,8 @@
         problems, since the benighted Fahrenheit scale coincides with my
         compatriot Celsius scale at −40°C=−40°F. (For reference, what I like to
         say per the above translates to “better 22 below than 86 above”, which is
-        not very catchy.) Also, Québec has
-        <a href="https://en.wikipedia.org/wiki/Poutine">poutine</a> as a kind of
+        not very catchy.) Also, Québec
+        has <a href="https://en.wikipedia.org/wiki/Poutine">poutine</a> as a kind of
         artiosclerotic apology for the language laws.
     </p>
 
@@ -75,9 +79,8 @@
         In 2007, I finished up my master’s
         thesis<a class="popover-dynamic"
                  data-toggle="popover"
-                 data-content="<cite>PyRemote: Object mobility in the Python programming language</cite>. …Honestly, I’m not proud of it.">⁽²⁾</a>
-        and got a real job as a Software Developer at
-        <a href="http://one45.com">one45 Software</a>; briefly, as my department
+                 data-content="<cite>PyRemote: Object mobility in the Python programming language</cite>. …Honestly, I’m not proud of it."
+        >⁽²⁾</a> and got a real job as a Software Developer at <a href="http://one45.com">one45 Software</a>; briefly, as my department
         was spun off as <a href="http://erezlife.com">eRezLife</a>.
 
         We were a very small shop, so everyone’s finger was in every pie. Hygiene
@@ -115,10 +118,11 @@
         where I’m working today.<a class="popover-dynamic"
                                    data-toggle="popover"
                                    data-content="Not literally. This was written on a Sunday, when in fact I didn’t work at all.">⁽³⁾</a>
-        My official title is Software Developer. Due to my own interests, inclinations,
+        My official title was Software Developer. Due to my own interests, inclinations,
         and extracurricular activities, I’ve also been given the semi-official
         title of Security Alarmist, and I’m also the primary resource for frontend
-        technologies (<a href="http://angularjs.org/">AngularJS</a>,
+        technologies
+        (<a href="http://angularjs.org/">AngularJS</a>,
         <a href="http://requirejs.org/">RequireJS</a>,
         <a href="http://gruntjs.com/">Grunt</a>,
         <a href="http://bower.io/">Bower</a>, and that sort of thing).
@@ -170,10 +174,7 @@
                 Master of Computer Science
             </td>
             <td>
-                <a href="http://vancouver.ca/">Vancouver</a>,
-                <a href="http://www.gov.bc.ca/bvprd/bc/home.do"><abbr title="British Columbia">BC</abbr></a>,
-                <a href="http://canada.gc.ca/">Canada</a>
-
+                <a href="http://vancouver.ca/">Vancouver</a>, <a href="http://www.gov.bc.ca/bvprd/bc/home.do"><abbr title="British Columbia">BC</abbr></a>, <a href="http://canada.gc.ca/">Canada</a>
             </td>
         </tr>
         <tr>
@@ -189,10 +190,7 @@
                 Minor in Mathematics
             </td>
             <td>
-                <a href="https://en.wikipedia.org/wiki/Lennoxville,_Quebec">Lennoxville</a>,
-                <a href="http://www.bonjourquebec.com/anglais/index.html">Québec</a>,
-                <a href="http://canada.gc.ca/">Canada</a>
-
+                <a href="https://en.wikipedia.org/wiki/Lennoxville,_Quebec">Lennoxville</a>, <a href="http://www.bonjourquebec.com/anglais/index.html">Québec</a>, <a href="http://canada.gc.ca/">Canada</a>
             </td>
         </tr>
         <tr class="text-muted">
@@ -201,40 +199,31 @@
             <td class="pres_table_c">1998–2001</td>
 
             <td>
-                High school (Swedish
-                <a href="https://en.wiktionary.org/wiki/gymnasieskola">gymnasium</a>;
+                High school (Swedish <a href="https://en.wiktionary.org/wiki/gymnasieskola">gymnasium</a>;
                 grades 10–12)</td>
             <td>
-                <a href="https://en.wikipedia.org/wiki/Finspång">Finspång</a>,
-                <a href="https://en.wikipedia.org/wiki/Östergötland_County">Östergötland</a>,
-                <a href="https://en.wikipedia.org/wiki/Sweden">Sweden</a>
+                <a href="https://en.wikipedia.org/wiki/Finspång">Finspång</a>, <a href="https://en.wikipedia.org/wiki/Östergötland_County">Östergötland</a>, <a href="https://en.wikipedia.org/wiki/Sweden">Sweden</a>
             </td>
         </tr>
 
         <tr class="text-muted">
-            <td><a
-                    href="http://www.finspang.se/Utbildning/Grundskolor/Vara-grundskolor/Nyhemsskolan/">Nyhemsskolan</a>
+            <td><a href="http://www.finspang.se/Utbildning/Grundskolor/Vara-grundskolor/Nyhemsskolan/">Nyhemsskolan</a>
             </td>
             <td class="pres_table_c">1995–1998</td>
             <td>Elementary (grades 7–9)</td>
             <td>
-                <a href="https://en.wikipedia.org/wiki/Finspång">Finspång</a>,
-                <a href="https://en.wikipedia.org/wiki/Östergötland_County">Östergötland</a>,
-                <a href="https://en.wikipedia.org/wiki/Sweden">Sweden</a>
+                <a href="https://en.wikipedia.org/wiki/Finspång">Finspång</a>, <a href="https://en.wikipedia.org/wiki/Östergötland_County">Östergötland</a>, <a href="https://en.wikipedia.org/wiki/Sweden">Sweden</a>
             </td>
         </tr>
 
 
         <tr class="text-muted">
-            <td><a
-                    href="http://www.finspang.se/Utbildning/Grundskolor/Vara-grundskolor/Viggestorpsskolan/">Viggestorpsskolan</a>
+            <td><a href="http://www.finspang.se/Utbildning/Grundskolor/Vara-grundskolor/Viggestorpsskolan/">Viggestorpsskolan</a>
             </td>
             <td class="pres_table_c">1989–1995</td>
             <td>Elementary (grades 1–6)</td>
             <td>
-                <a href="https://en.wikipedia.org/wiki/Finspång">Finspång</a>,
-                <a href="https://en.wikipedia.org/wiki/Östergötland_County">Östergötland</a>,
-                <a href="https://en.wikipedia.org/wiki/Sweden">Sweden</a>
+                <a href="https://en.wikipedia.org/wiki/Finspång">Finspång</a>, <a href="https://en.wikipedia.org/wiki/Östergötland_County">Östergötland</a>, <a href="https://en.wikipedia.org/wiki/Sweden">Sweden</a>
             </td>
         </tr>
         </tbody>
@@ -248,22 +237,22 @@
         <tr>
             <td>UBC International Student scholarship</td>
             <td>
-                <a href="http://cs.ubc.ca">Department of Computer Science</a>,
-                <a href="http://www.ubc.ca">UBC</a></td>
+                <a href="http://cs.ubc.ca">Department of Computer Science</a>, <a href="http://www.ubc.ca">UBC</a>
+            </td>
             <td class="pres_table_c">2005–2006, 2006–2007</td>
-            <td><!--$3,300 CDN -->Annual scholarship.</td>
+            <td>{/*<!--$3,300 CDN -->Annual scholarship.*/}</td>
         </tr>
         <tr>
             <td>The University Prize in Computer Science</td>
             <td><a href="http://www.ubishops.ca">Bishop’s University</a></td>
             <td class="pres_table_c">2005</td>
-            <td><!--$100 award.--></td>
+            <td>{/*<!--$100 award.-->*/}</td>
         </tr>
         <tr>
             <td>Stephen St. Clair Memorial Scholarship</td>
             <td><a href="http://www.ubishops.ca">Bishop’s University</a></td>
             <td class="pres_table_c">2002–2003, 2003–2004, 2004–2005</td>
-            <td><!--$4,000 CDN annual scholarship.-->
+            <td>{/*<!--$4,000 CDN annual scholarship.-->*/}
                 Awarded on basis of academic standing for 2002–2003. Renewed
                 for 2003–2004 and again 2004–2005.
             </td>
@@ -272,15 +261,13 @@
             <td>The Albert Kwong Memorial Prize in Computer Science</td>
             <td><a href="http://www.ubishops.ca">Bishop’s University</a></td>
             <td class="pres_table_c">2002</td>
-            <td>Awarded on basis of academic standing. <!--$50 CDN award.--></td>
+            <td>Awarded on basis of academic standing. {/*<!--$50 CDN award.-->*/}</td>
         </tr>
         <tr>
             <td>The U-1 Alumni Prize</td>
             <td><a href="http://www.ubishops.ca">Bishop’s University</a></td>
             <td class="pres_table_c">2002</td>
-            <td>Highest academic standing among male first-year students at
-                <a href="http://www.ubishops.ca">B.U.</a>
-                <!--; $50 CDN award.--></td>
+            <td>Highest academic standing among male first-year students at <a href="http://www.ubishops.ca">B.U.</a> {/*<!--; $50 CDN award.-->*/}</td>
         </tr>
         <tr>
             <td>Georg Leires fond (<em>The Georg Leire Fund</em>)</td>
@@ -291,10 +278,13 @@
             </td>
             <td class="pres_table_c">2001</td>
             <td></td>
+          {/*
             <!--td>Scholarship of <a
 			href="http://finance.yahoo.com/currency/convert?amt=9000&amp;from=SEK&amp;to=CAD&amp;submit=Convert">9,000 SEK</a>. Bequeathed by committee through
 			<a href="https://en.wikipedia.org/wiki/Finspång/bergska/start.htm">Bergska skolan</a>.</td-->
+           */}
         </tr>
         </tbody>
     </table>
-</div>
+  </div>
+</div>;

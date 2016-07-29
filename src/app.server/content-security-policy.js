@@ -7,8 +7,9 @@ module.exports = {
     defaultSrc, // @TODO cfg
     scriptSrc: defaultSrc.concat(
       [
-        "'unsafe-inline'",
+        // "'unsafe-inline'",
         'https://*.twitter.com',
+        'https://*.twimg.com',
         'https://www.google-analytics.com'
       ]),
     imgSrc: defaultSrc.concat(

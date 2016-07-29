@@ -11,48 +11,20 @@ var del = require('del')
   , rev = require('gulp-rev')
   , runSequence = require('run-sequence')
   , sourcemaps = require('gulp-sourcemaps')
-  , webpack = require('webpack');
-var handlebars = require('gulp-handlebars');
+  , watch = require('gulp-watch');
 var wrap = require('gulp-wrap');
 var concat = require('gulp-concat');
+var msx = require('gulp-msx');
 
 var LessPluginCleanCSS = require('less-plugin-clean-css')
   , LessPluginAutoPrefix = require('less-plugin-autoprefix');
 
 
-gulp.task('clean', function() {
-  return del(['build']);
+gulp.task('clean', function(cb) {
+  return del(['build'], cb);
 });
 
-gulp.task('templates', ['clean'], function (cb) {
-  // fs.mkdir(path.join(__dirname, 'build'), function(err) {
-  //   hulkster.compile(path.join(__dirname, 'src', 'templates', '**', '*.hbs'), {
-  //     format: 'js',
-  //     minify: 'true',
-  //     minifyHtml: 'true',
-  //     output: path.join(__dirname, 'build', 'templates.js'),
-  //     hoganVar: 'require("hogan.js")'
-  //   });
-  //   cb();
-  // });
-
-  return gulp.src('src/templates/**/*.hbs')
-    .pipe(htmlmin({
-      collapseWhitespace: true,
-      conservativeCollapse: true,
-      removeAttributeQuotes: true
-    }))
-    .pipe(handlebars({
-      handlebars: require('handlebars'),
-      compilerOptions: {
-        min: true
-      }
-    }))
-    .pipe(wrap('exports[\'<%= file.relative %>\'] = require(\'handlebars/dist/handlebars.runtime.min.js\').template(<%= contents %>);'))
-    .pipe(concat('templates.js'))
-    .pipe(gulp.dest('build'));
-});
-
+const LESS_FILES = 'src/less/*.{css,less}';
 gulp.task('less', function () {
   var cleancss = new LessPluginCleanCSS({
       advanced: true,
@@ -62,12 +34,17 @@ gulp.task('less', function () {
     });
   var autoprefix = new LessPluginAutoPrefix({ browsers: ['last 2 versions'] });
 
-  return gulp.src('src/less/**')
-    //.pipe(sourcemaps.init())
+  return gulp.src(LESS_FILES)
+    .pipe(sourcemaps.init())
     .pipe(less({plugins: [autoprefix, cleancss]}))
-    //.pipe(sourcemaps.write('./maps'))
-    .pipe(gulp.dest('build/assets'));
+    .pipe(sourcemaps.write('./maps'))
+    .pipe(gulp.dest('build/assets'))
+    .pipe(gulp.dest('build/'));
 });
+gulp.task('watch-less', function() {
+  return watch(LESS_FILES, runSequence('less'));
+});
+
 
 
 gulp.task('gallery', function() {
@@ -80,39 +57,87 @@ gulp.task('copy', function() {
     .pipe(gulp.dest('build/assets'));
 });
 
-gulp.task('webpack', ['clean', 'templates', 'less'], function (callback) {
-  webpack(
-    require('./webpack.config'),
-    function (err, stats) {
-      if (err) {
-        throw new gutil.PluginError('webpack', err);
-      }
-      gutil.log('[webpack]', stats.toString({
-        // output options
-      }));
-      callback();
-    });
-});
 
-gulp.task('gzip', ['webpack', 'copy', 'gallery', 'less'], function() {
+gulp.task('gzip', ['copy', 'gallery', 'less'], function() {
   return gulp.src('build/**')
     .pipe(gzip({append: true}))
     .pipe(gulp.dest('build'));
 });
 
 gulp.task('rev', function() {
-  return gulp.src(['build/assets/*.css', 'assets/index.js'], {base: 'build/assets'})
+  return gulp.src(['build/**/*.{css,js}'], {base: 'build/'})
     .pipe(rev())
-    .pipe(gulp.dest('build/assets'))  // write rev'd assets to build dir
+    .pipe(gulp.dest('build/'))  // write rev'd assets to build dir
     .pipe(rev.manifest())
-    .pipe(gulp.dest('build/assets')); // write manifest to build dir
+    .pipe(gulp.dest('build/')); // write manifest to build dir
+});
+
+function transformJSX() {
+  return gulp.src('./src/**/*.jsx')
+    .pipe(msx({harmony: true}))
+    .pipe(gulp.dest('./src'))
+}
+gulp.task('transform-jsx', transformJSX);
+gulp.task('watch-jsx', function() {
+  return watch('./src/**/*.jsx', transformJSX);
 });
 
 
+(function browserifyStuff() {
+  const buffer = require('vinyl-buffer');
+  const source = require('vinyl-source-stream');
+  const browserify = require('browserify');
+  const babelify = require('babelify');
+  const watchify = require('watchify');
+  const uglify = require('gulp-uglify');
+  const envify = require('gulp-envify');
+
+  const browserifyOpts = {
+    entries: ['./src/app.client/index.js'],
+    debug: true
+  };
+  const opts = Object.assign({}, watchify.args, browserifyOpts);
+  const b = watchify(browserify(opts))
+    .transform(babelify, {presets: ['es2015']});
+
+  b.on('update', bundle); // on any dep update, runs the bundler
+  b.on('log', gutil.log); // output build logs to terminal
+
+  function bundle() {
+    gutil.log('Rebuild Browserify bundle');
+    return b.bundle()
+      // log errors if they happen
+      .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+      .pipe(source('client.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
+      .pipe(uglify())
+      .pipe(sourcemaps.write('./')) // writes .map file
+      .pipe(gulp.dest('./build'));
+  }
+
+  gulp.task('browserify', bundle);
+})();
+
+
+
 gulp.task('default', function(cb) {
-  runSequence(
-    'clean',
-    ['webpack', 'copy', 'gzip'],
+  return runSequence(
+    ['clean'],
+    ['transform-jsx'],
+    ['browserify', 'copy', 'less'],
+    ['watch-jsx', 'watch-less'],
+    cb
+  );
+});
+
+gulp.task('build', function(cb) {
+  return runSequence(
+    ['clean'],
+    ['transform-jsx'],
+    ['browserify', 'copy', 'less'],
+    ['rev'],
+    ['gzip'],
     cb
   );
 });

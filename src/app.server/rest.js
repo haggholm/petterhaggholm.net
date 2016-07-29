@@ -4,16 +4,32 @@ var _ = require('lodash')
   , db = require('./bookshelf')
   , fs = require('fs')
   , express = require('express');
+const m = require('mithril');
+
 
 var books = require('./books');
 
 
 const cache = {};
 
-module.exports = express.Router();
+const router = express.Router();
+const api = module.exports = {};
+
+function asCallback(deferred) {
+  return function(err, data) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      deferred.resolve(data);
+    }
+  }
+}
 
 
-module.exports.gallery = function(callback) {
+
+api.gallery = function(filename) {
+  const deferred = m.deferred();
+
   var getGallery;
   if (cache.gallery) {
     getGallery = (cb) => cb(null, cache.gallery);
@@ -25,36 +41,34 @@ module.exports.gallery = function(callback) {
       });
   }
 
-  if (arguments.length === 1) {
-    getGallery(callback);
+  if (!filename) {
+    getGallery((err, data) => deferred.resolve(data));
 
   } else {
-    const filename = arguments[0];
-    callback = arguments[1];
-
     getGallery((err, gallery) => {
       for (let i = gallery.length - 1; i >= 0; i--) {
         var row = gallery[i];
         if (row.filename === filename) {
-          return callback(null, row);
+          deferred.resolve(row);
         }
       }
 
-      return callback(new Error(`No such picture: ${filename}`));
+      deferred.reject(new Error(`No such picture: ${filename}`));
     });
   }
+
+  return deferred.promise;
 };
 
-module.exports.books = function(callback) {
-  if (arguments.length === 1) {
-    books.getAll(callback);
+api.books = function(id) {
+  const d = m.deferred();
+
+  if (!id) {
+    books.getAll(asCallback(d));
 
   } else {
-    const id = arguments[0];
-    callback = arguments[1];
-
     books.getDetails(id, (err, book) => {
-      if (err) return callback(err);
+      if (err) return d.reject(err);
 
       book.hasReview = !!(book.review || book.has_series_review);
       book.isEnglish = book.language.name === 'English';
@@ -62,43 +76,33 @@ module.exports.books = function(callback) {
       book.translated = !book.read_original;
       book.has_translation_notes = book.isEnglish && book.translations.length ||
                                    !book.isEnglish && book.read_original
-      callback(null, book);
+      d.resolve(book);
     })
   }
+
+  return d.promise;
 };
 
-module.exports.get('/gallery/:picture', function(req, res) {
-  module.exports.gallery(req.params.picture, function(err, data) {
-    if (err) {
-      res.json(err.message).status(500);
-      return;
-    }
 
-    res.json(data).status(200);
-  });
+function responder(res) {
+  return [
+    (data) => res.json(data).status(200),
+    (err) => res.json(err.message).status(500)
+  ];
+}
+
+router.get('/gallery/picture/:picture', (req, res) => {
+  api.gallery(req.params.picture)
+     .then(...responder(res));
+});
+router.get('/gallery', (req, res) => api.gallery().then(...responder(res)));
+
+router.get('/books/:id', (req, res) => {
+  api.books(req.params.id).then((data) => sendJSONto(res)(data));
+});
+router.get('/books', (req, res) => {
+  console.log('api.books()');console.log(api.books())
+  api.books().then(...responder(res))
 });
 
-
-module.exports.get('/books/:id', function(req, res) {
-  module.exports.books(req.params.id, function(err, data) {
-    if (err) {
-      res.json(err.message).status(500);
-      return;
-    }
-
-    res.json(data).status(200);
-  });
-});
-
-_.each(['books', 'gallery'], function(api) {
-  module.exports.get('/' + api, function(req, res) {
-    module.exports[api](function(err, data) {
-      if (err) {
-        res.json(err.message).status(500);
-        return;
-      }
-
-      res.json(data).status(200);
-    });
-  });
-});
+module.exports.router = router;

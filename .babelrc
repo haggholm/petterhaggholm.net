@@ -1,0 +1,6 @@
+{
+  "plugins": [
+    "mithril-objectify",
+    "transform-inline-environment-variables"
+  ]
+}

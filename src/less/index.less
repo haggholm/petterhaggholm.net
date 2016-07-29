@@ -1,11 +1,8 @@
 @import '../../node_modules/bootstrap/less/bootstrap';
-@import "bs-variables.less";
+@import 'bs-variables.less';
 
 @import '../../node_modules/font-awesome/less/font-awesome';
 @fa-font-path: '../assets';
-
-@import '../../node_modules/datatables-bootstrap3-plugin/media/css/datatables-bootstrap3';
-
 
 #bookTable {
   width: 100% !important;
@@ -132,5 +129,61 @@ table.table thead .sorting_asc:after {
 @media screen {
   .refbody {
     display: none;
+  }
+}
+
+.navbar span.dropdown-toggle {
+  background-color: rgba(0, 0, 0, 0);
+  box-sizing: border-box;
+  color: rgb(157, 157, 157);
+  cursor: auto;
+  display: block;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  height: 50px;
+  line-height: 20px;
+  list-style-image: none;
+  list-style-position: outside;
+  list-style-type: none;
+  outline-color: rgb(157, 157, 157);
+  outline-style: none;
+  outline-width: 0px;
+  padding-bottom: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 15px;
+  position: relative;
+  text-align: left;
+  text-decoration: none;
+}
+
+.arrow {
+  .fa();
+
+  &.left:before           { content: @fa-var-chevron-left; }
+  &.right:before          { content: @fa-var-chevron-right; }
+  &.up:before             { content: @fa-var-chevron-up; }
+  &.down:before           { content: @fa-var-chevron-down; }
+}
+
+.icon {
+  .fa();
+
+  &.chevron.left:before   { content: @fa-var-chevron-left; }
+  &.chevron.right:before  { content: @fa-var-chevron-right; }
+  &.chevron.up:before     { content: @fa-var-chevron-up; }
+  &.chevron.down:before   { content: @fa-var-chevron-down; }
+}
+
+#bookTableContainer {
+  th:nth-child(1) { width: 55%; }
+  th:nth-child(2) { width: 25%; }
+  th:nth-child(3) {
+    width: 15%;
+    min-width: 5em;
+  }
+  th:nth-child(4) {
+    width: 5%;
+    min-width: 3em;
   }
 }

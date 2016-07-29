@@ -5,3 +5,4 @@ build/
 node_modules/
 _init.sh
 config.js
+src/app.client/views/*.js

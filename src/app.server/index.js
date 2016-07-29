@@ -5,7 +5,6 @@ const async = require('async');
 const crypto = require('crypto');
 const express = require('express');
 const glob = require('glob');
-const handlebars = require('handlebars');
 const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
@@ -18,119 +17,87 @@ const multer  = require('multer');
 
 const auth = require('./auth');
 const sendFileOr403 = require('./send-file');
-const config = require('../../config');
-const templates = require('../../build/templates');
-const routes = require('../app.shared/routes');
+const serverConfig = require('./server-config');
 
-// Initialise template helpers
-require('../app.shared/template-helpers')(handlebars);
+const rootPath = path.resolve(`${__dirname}/../..`);
+const app = require('./app');
 
-const rootPath = path.resolve(path.join(__dirname, '..', '..'));
-const templateRoot = path.join(rootPath, 'src', 'templates');
-
-
-function readTemplate(name, callback) {
-  if (templates[name]) {
-    return callback(null, templates[name]);
+function joinVerifyPath(rootPath, parent, filePath) {
+  const absParent = path.join(rootPath, parent);
+  const res = path.resolve(path.join(absParent, filePath));
+  if (!res.startsWith(`${absParent}/`)) {
+    return '';
   }
 
-  fs.readFile(path.join(templateRoot, `${name}.hbs`), 'utf8', function(err, data) {
-      if (err) {
-        return callback(err);
-      }
-
-      templates[name] = handlebars.compile(data, { min: true });
-      callback(null, templates[name]);
-    });
+  return res;
 }
 
-async.auto({
-  indexTemplate: (cb) => readTemplate('index', cb),
-  navTemplate: (cb) => readTemplate('nav', cb),
-
-  clientIndexFile: function(cb) {
-    glob.glob(path.join(rootPath, 'build', 'index.*.js'), function(err, data) {
-      if (err) return cb(err);
-
-      cb(null, '/' + path.relative(path.join(rootPath, 'build'), data[0]));
-    });
-  },
-
-  fontAwesomeVersion: function(cb) {
-    fs.readFile(
-      path.join(rootPath, 'node_modules', 'font-awesome', 'package.json'),
-      'utf8',
-      function(err, data) {
-        if (err) return cb(err);
-
-        cb(null, JSON.parse(data).version);
-      });
-  },
-
-  sslKey: function(cb) {
-    var keyFilePath = path.join(rootPath, 'sample-keys', 'phnet3.sample.key');
-    fs.readFile(keyFilePath, 'utf8', cb);
-  },
-
-  sslCert: function(cb) {
-    var keyFilePath = path.join(rootPath, 'sample-keys', 'phnet3.sample.crt');
-    fs.readFile(keyFilePath, 'utf8', cb);
-  },
-
-  httpModule: (cb) => cb(null, require('spdy'))
-}, function init(err, initData){
-  if (err) {
-    throw err;
+const existsCache = {};
+function serveStatic(req, res, next) {
+  var filePath = req.url.replace(/\?.*$/, '');
+  var buildPath = joinVerifyPath(rootPath, 'build', filePath)
+    , srcPath = joinVerifyPath(rootPath, 'src', filePath);
+  if (existsCache[buildPath]) {
+    return sendFileOr403(res, buildPath);
+  } else if (existsCache[srcPath]) {
+    return sendFileOr403(res, srcPath);
   }
 
-  const indexTemplate = initData.indexTemplate;
-  const indexData = {
-    appEntry: initData.clientIndexFile,
-    fontAwesomeVersion: initData.fontAwesomeVersion
-  };
+  fs.exists(buildPath, function(exists) {
+    if (exists) {
+      existsCache[buildPath] = true;
+      sendFileOr403(res, buildPath);
+    } else {
+      fs.exists(srcPath, function(exists) {
+        if (exists) {
+          existsCache[srcPath] = true;
+          sendFileOr403(res, srcPath);
+        } else {
+          next();
+        }
+      });
+    }
+  });
+}
 
-  const app = express();
+
+const base = (function() {
+  const handlebars = require('handlebars');
+  const template = handlebars.compile(
+    fs.readFileSync(`${__dirname}/../views/index.hbs`, 'utf8'),
+    { min: true }
+  );
+
+  return function(content) {
+    return template({
+                      appEntry: serverConfig.appEntry,
+                      fontAwesomeVersion: serverConfig.fontAwesomeVersion,
+                      content: content,
+                      // nav: initData.navTemplate(clientConfig),
+                      // phnetConfig: config
+                    });
+  };
+})();
+
+
+const prefetch = [
+  `</${serverConfig.appEntry}>; rel=prefetch`,
+  '</assets/index.css>; rel=prefetch',
+  `</assets/font-awesome.woff2?v=${serverConfig.fontAwesomeVersion}>; rel=prefetch`
+];
+
+
+(function init() {
   app.use(helmet({
     contentSecurityPolicy: require('./content-security-policy')
   }));
 
-  const clientConfig = _.pick(config, ['rootURL', 'staticRoot', 'gaCode']);
-  const clientConfigJSON = JSON.stringify(clientConfig);
-
-  app.engine('hbs', function renderTemplate(filePath, options, callback) {
-    const relPath = path.relative(templateRoot, path.normalize(filePath));
-    const templateName = relPath.replace(/\.hbs$/, '');
-
-    readTemplate(templateName, (err, template) => {
-      if (err) return callback(err);
-
-      const rendered = indexTemplate(_.extend({
-          content: template(options),
-          nav: initData.navTemplate(clientConfig),
-          phnetConfig: clientConfigJSON
-        },
-        indexData
-      ));
-      callback(null, rendered);
-    });
-  });
-
-  app.set('views', templateRoot);
-  app.set('view engine', 'hbs');
   app.enable('strict routing');
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  app.route('/').get(function (req, res) {
-    res.set('Link', [
-      `<${indexData.appEntry}>; rel=prefetch`,
-      '</assets/index.css>; rel=prefetch',
-      `</assets/font-awesome.woff2?v=${indexData.fontAwesomeVersion}>; rel=prefetch`
-    ]);
-    res.render('home');
-  });
 
   app.use(session({
-    secret: config.sessionSecret || crypto.randomBytes(64).toString('hex'),
+    secret: serverConfig.sessionSecret || crypto.randomBytes(64).toString('hex'),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -265,48 +232,24 @@ async.auto({
     });
   });
 
-  function getAPI(pth, callback) {
-    const func = require('./rest')[pth];
-    if (arguments.length > 2) {
-      const args = Array.prototype.slice.call(arguments, 1);
-      func.apply(null, args);
-    } else {
-      return func(function(err, data) {
-        callback(err, data);
-      });
-    }
-  }
-
-  app.use('/api', require('./rest'));
-
-  routes.init(app, getAPI, config);
-
+  // Mount API routes
+  app.use('/api', require('./rest').router);
+  // Mount view routes
+  require('./views');
+  // Serve static files
+  app.route('*').get(serveStatic);
   app.route('*').get(function(req, res, next) {
-    var filePath = req.url.replace(/\?.*$/, '');
-    var buildPath = path.join(rootPath, 'build', filePath)
-      , srcPath = path.join(rootPath, 'src', filePath);
-
-    fs.exists(buildPath, function(exists) {
-      if (exists) {
-        sendFileOr403(res, buildPath);
-      } else {
-        fs.exists(srcPath, function(exists) {
-          if (exists) {
-            sendFileOr403(res, srcPath);
-          } else {
-            next();
-          }
-        });
-      }
-    });
+    res.type('html');
+    res.set('Link', prefetch);
+    res.end(base(''));
   });
 
   var port = 4000
     , options = {
-      key: initData.sslKey,
-      cert: initData.sslCert
+      key: serverConfig.sslKey,
+      cert: serverConfig.sslCert
     };
-  initData.httpModule.createServer(options, app).listen(port);
+  serverConfig.httpModule.createServer(options, app).listen(port);
 
   _.each(['HUP', 'INT', 'QUIT', 'TERM'], function(sig) {
     process.on('SIG'+sig, function() {
@@ -321,4 +264,4 @@ async.auto({
   });
 
   console.log('Listening on port ' + 4000);
-});
+})();

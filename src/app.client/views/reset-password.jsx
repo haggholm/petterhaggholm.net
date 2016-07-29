@@ -1,10 +1,12 @@
-<form id="reset-form" action="/api/reset" method="POST">
-  <input type="hidden" name="token" value="{{token}}"/>
+'use strict';
 
-  <fieldset class="form-group {{#if error}}has-danger{{/if}}">
+module.exports = (ctrl) => <form id="reset-form" action="/api/reset" method="POST">
+  <input type="hidden" name="token" value={ ctrl.token }/>
+
+  <fieldset class={ error ? 'form-group has-danger' : 'form-group' }>
     <label for="reset-email">Email</label>
     <input type="email" class="form-control" id="reset-email" name="email" placeholder="Email"
-           value="{{email}}" readonly="readonly">
+           value="{{email}}" readonly="readonly"/>
   </fieldset>
 
   <fieldset class="form-group">
@@ -19,4 +21,4 @@
   </fieldset>
 
   <button type="submit" id="reset-btn" class="btn btn-primary">Save</button>
-</form>
+</form>;
