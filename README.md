@@ -1,5 +1,7 @@
 # petterhaggholm.net
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/haggholm/petterhaggholm.net.svg)](https://greenkeeper.io/)
+
 Source code for a new version of my personal website,
 [petterhaggholm.net](https://petterhaggholm.net).
 Mostly for learning purposes/to play with Express &c. Additionally, I want to
